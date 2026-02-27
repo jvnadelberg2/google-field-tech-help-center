@@ -1,0 +1,22 @@
+{
+  "articles": [
+    {
+      "title": "Site arrival checklist",
+      "content": [
+        "Confirm ticket details before entering the site.",
+        "Badge in and record time-in.",
+        "Capture LED states and any visible errors.",
+        "Take label photos before making changes."
+      ]
+    },
+    {
+      "title": "Basic network triage",
+      "content": [
+        "Check link light first.",
+        "If no link, reseat cable or swap known-good cable.",
+        "Verify IP address.",
+        "Ping default gateway."
+      ]
+    }
+  ]
+}
