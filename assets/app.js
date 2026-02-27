@@ -1,4 +1,89 @@
+async function init() {
+  const res = await fetch("data/kb.json", { cache: "no-store" });
+  const kb = await res.json();
 
+  const results = document.getElementById("results");
+  const article = document.getElementById("article");
+  const articleTitle = document.getElementById("articleTitle");
+  const q = document.getElementById("q");
+  const clearBtn = document.getElementById("clearBtn");
+  const countPill = document.getElementById("countPill");
+
+  function norm(s) {
+    return (s || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function searchableText(a) {
+    return norm([a.title, a.summary, ...(a.tags || [])].join(" "));
+  }
+
+  function renderArticle(a) {
+    articleTitle.textContent = a ? a.title : "Select an article";
+    article.innerHTML = "";
+    if (!a) return;
+
+    const meta = document.createElement("div");
+    meta.style.color = "#5f6368";
+    meta.style.fontSize = "13px";
+    meta.style.marginBottom = "12px";
+    meta.textContent = `${a.minutes ? "~" + a.minutes + " min" : ""}${a.updated ? " • Updated " + a.updated : ""}`;
+    article.appendChild(meta);
+
+    (a.content || []).forEach(line => {
+      const p = document.createElement("p");
+      p.textContent = line;
+      article.appendChild(p);
+    });
+  }
+
+  function renderList() {
+    const query = norm(q.value);
+    results.innerHTML = "";
+
+    const list = (kb.articles || []).filter(a => {
+      if (!query) return true;
+      return searchableText(a).includes(query);
+    });
+
+    if (countPill) countPill.textContent = String(list.length);
+
+    list.forEach(a => {
+      const div = document.createElement("div");
+      div.className = "article-link";
+      div.innerHTML = `
+        <div style="font-weight:600">${a.title}</div>
+        <div style="color:#5f6368;font-size:13px;margin-top:4px">${a.summary || ""}</div>
+      `;
+      div.onclick = () => renderArticle(a);
+      results.appendChild(div);
+    });
+
+    if (!list.length) {
+      const empty = document.createElement("div");
+      empty.style.color = "#5f6368";
+      empty.style.padding = "8px";
+      empty.textContent = "No matches.";
+      results.appendChild(empty);
+      renderArticle(null);
+    }
+  }
+
+  q?.addEventListener("input", renderList);
+
+  clearBtn?.addEventListener("click", () => {
+    q.value = "";
+    q.focus();
+    renderList();
+  });
+
+  renderList();
+}
+
+init();
 async function init() {
   const res = await fetch("data/kb.json", { cache: "no-store" });
   const data = await res.json();

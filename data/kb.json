@@ -1,4 +1,43 @@
 {
+  "siteTitle": "Field Technician Help Center",
+  "tagline": "Fast answers for on-site work.",
+  "categories": [
+    { "id": "basics", "name": "On-site basics" },
+    { "id": "networking", "name": "Networking" }
+  ],
+  "articles": [
+    {
+      "id": "arrival-checklist",
+      "category": "basics",
+      "title": "Site arrival checklist",
+      "summary": "A 2-minute checklist to prevent rework and speed up closeout.",
+      "tags": ["check-in", "access", "safety", "evidence"],
+      "minutes": 3,
+      "updated": "2026-02-27",
+      "content": [
+        "Confirm ticket details before entering the site.",
+        "Badge in and record time-in.",
+        "Capture LED states and any visible errors.",
+        "Take label photos before making changes."
+      ]
+    },
+    {
+      "id": "basic-network-triage",
+      "category": "networking",
+      "title": "Basic network triage",
+      "summary": "Isolate link vs IP vs upstream quickly before escalating.",
+      "tags": ["link light", "DHCP", "gateway", "DNS"],
+      "minutes": 4,
+      "updated": "2026-02-27",
+      "content": [
+        "Check link light first.",
+        "If no link, reseat cable or swap known-good cable.",
+        "Verify IP address.",
+        "Ping default gateway."
+      ]
+    }
+  ]
+}
   "articles": [
     {
       "title": "Site arrival checklist",
