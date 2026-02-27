@@ -16,12 +16,18 @@
       <div class="tagline">Fast answers for on-site work.</div>
     </div>
   </div>
+
+  <div class="search">
+    <input id="q" type="search" placeholder="Search (reboot, DHCP, link light)..." autocomplete="off" />
+    <button id="clearBtn" type="button" aria-label="Clear">×</button>
+  </div>
 </header>
 
 <main class="layout">
   <section class="panel">
     <div class="panelhead">
       <div class="paneltitle">Articles</div>
+      <div class="pill" id="countPill">0</div>
     </div>
     <div id="results"></div>
   </section>
