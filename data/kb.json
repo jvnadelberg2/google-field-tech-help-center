@@ -25,37 +25,51 @@
       "id": "basic-network-triage",
       "category": "networking",
       "title": "Basic network triage",
-      "summary": "Isolate link vs IP vs upstream quickly before escalating.",
+      "summary": "Interactive guided troubleshooting for connectivity issues.",
       "tags": ["link light", "DHCP", "gateway", "DNS"],
       "minutes": 4,
       "updated": "2026-02-27",
-      "content": [
-        "Check link light first.",
-        "If no link, reseat cable or swap known-good cable.",
-        "Verify IP address.",
-        "Ping default gateway."
-      ]
-    }
-  ]
-}
-  "articles": [
-    {
-      "title": "Site arrival checklist",
-      "content": [
-        "Confirm ticket details before entering the site.",
-        "Badge in and record time-in.",
-        "Capture LED states and any visible errors.",
-        "Take label photos before making changes."
-      ]
-    },
-    {
-      "title": "Basic network triage",
-      "content": [
-        "Check link light first.",
-        "If no link, reseat cable or swap known-good cable.",
-        "Verify IP address.",
-        "Ping default gateway."
-      ]
+      "type": "stepper",
+      "flow": {
+        "start": "link",
+        "steps": {
+          "link": {
+            "question": "Is the link light on?",
+            "yes": "ip",
+            "no": "link_fix"
+          },
+          "link_fix": {
+            "result": "No physical link detected. Reseat cable, try known-good cable or port. If still no link, escalate with port ID."
+          },
+          "ip": {
+            "question": "Does the device have a valid IP address?",
+            "yes": "gateway",
+            "no": "dhcp_fix"
+          },
+          "dhcp_fix": {
+            "result": "Likely DHCP/VLAN issue. Verify port profile and VLAN. Escalate with MAC and port ID."
+          },
+          "gateway": {
+            "question": "Can you ping the default gateway?",
+            "yes": "dns",
+            "no": "routing_fix"
+          },
+          "routing_fix": {
+            "result": "Gateway unreachable. Suspect VLAN mismatch or routing issue. Escalate with IP and VLAN."
+          },
+          "dns": {
+            "question": "Can you resolve a known hostname?",
+            "yes": "success",
+            "no": "dns_fix"
+          },
+          "dns_fix": {
+            "result": "DNS issue suspected. Test direct IP. Escalate with resolver info."
+          },
+          "success": {
+            "result": "Connectivity looks good. If service still fails, escalate to application owner."
+          }
+        }
+      }
     }
   ]
 }
