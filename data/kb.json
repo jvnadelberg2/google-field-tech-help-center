@@ -1,17 +1,14 @@
 {
-  "siteTitle": "Field Technician Help Center",
-  "tagline": "Fast answers for on-site work.",
   "categories": [
-    { "id": "basics", "name": "On-site basics" },
+    { "id": "onsite", "name": "On-site basics" },
     { "id": "networking", "name": "Networking" }
   ],
   "articles": [
     {
-      "id": "arrival-checklist",
-      "category": "basics",
+      "id": "site-arrival-checklist",
+      "category": "onsite",
       "title": "Site arrival checklist",
       "summary": "A 2-minute checklist to prevent rework and speed up closeout.",
-      "tags": ["check-in", "access", "safety", "evidence"],
       "minutes": 3,
       "updated": "2026-02-27",
       "content": [
@@ -26,9 +23,6 @@
       "category": "networking",
       "title": "Basic network triage",
       "summary": "Interactive guided troubleshooting for connectivity issues.",
-      "tags": ["link light", "DHCP", "gateway", "DNS"],
-      "minutes": 4,
-      "updated": "2026-02-27",
       "type": "stepper",
       "flow": {
         "start": "link",
@@ -36,37 +30,21 @@
           "link": {
             "question": "Is the link light on?",
             "yes": "ip",
-            "no": "link_fix"
+            "no": "no_link"
           },
-          "link_fix": {
-            "result": "No physical link detected. Reseat cable, try known-good cable or port. If still no link, escalate with port ID."
+          "no_link": {
+            "result": "Check cable, switch port, and power to device."
           },
           "ip": {
-            "question": "Does the device have a valid IP address?",
-            "yes": "gateway",
-            "no": "dhcp_fix"
+            "question": "Does the device receive an IP address?",
+            "yes": "upstream",
+            "no": "dhcp"
           },
-          "dhcp_fix": {
-            "result": "Likely DHCP/VLAN issue. Verify port profile and VLAN. Escalate with MAC and port ID."
+          "dhcp": {
+            "result": "Verify VLAN, DHCP scope, and switch port configuration."
           },
-          "gateway": {
-            "question": "Can you ping the default gateway?",
-            "yes": "dns",
-            "no": "routing_fix"
-          },
-          "routing_fix": {
-            "result": "Gateway unreachable. Suspect VLAN mismatch or routing issue. Escalate with IP and VLAN."
-          },
-          "dns": {
-            "question": "Can you resolve a known hostname?",
-            "yes": "success",
-            "no": "dns_fix"
-          },
-          "dns_fix": {
-            "result": "DNS issue suspected. Test direct IP. Escalate with resolver info."
-          },
-          "success": {
-            "result": "Connectivity looks good. If service still fails, escalate to application owner."
+          "upstream": {
+            "result": "Escalate to network team with collected details."
           }
         }
       }

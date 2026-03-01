@@ -9,34 +9,35 @@ async function init() {
   const q = document.getElementById("q");
   const clearBtn = document.getElementById("clearBtn");
   const countPill = document.getElementById("countPill");
-
   const catList = document.getElementById("catList");
 
-  let activeCategory = null; // null = All Articles
+  const ticketFields = document.getElementById("ticketFields");
+  const tfSite = document.getElementById("tfSite");
+  const tfAsset = document.getElementById("tfAsset");
+  const tfPort = document.getElementById("tfPort");
+  const tfMac = document.getElementById("tfMac");
+  const tfIp = document.getElementById("tfIp");
 
-  function norm(s) {
-    return (s || "")
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
+  let activeCategory = null;
 
-  function searchableText(a) {
-    return norm([a.title, a.summary, ...(a.tags || [])].join(" "));
+  function getTicketInfo() {
+    return {
+      site: tfSite?.value?.trim(),
+      asset: tfAsset?.value?.trim(),
+      port: tfPort?.value?.trim(),
+      mac: tfMac?.value?.trim(),
+      ip: tfIp?.value?.trim()
+    };
   }
 
   function renderStepper(a) {
     let current = a.flow.start;
+    const path = [];
 
     function showStep() {
       article.innerHTML = "";
       const step = a.flow?.steps?.[current];
-
-      if (!step) {
-        article.textContent = "Stepper error: missing step definition.";
-        return;
-      }
+      if (!step) return;
 
       if (step.question) {
         const h = document.createElement("h3");
@@ -52,11 +53,13 @@ async function init() {
         noBtn.className = "step-btn secondary";
 
         yesBtn.onclick = () => {
+          path.push({ question: step.question, answer: "Yes" });
           current = step.yes;
           showStep();
         };
 
         noBtn.onclick = () => {
+          path.push({ question: step.question, answer: "No" });
           current = step.no;
           showStep();
         };
@@ -72,18 +75,8 @@ async function init() {
         card.textContent = step.result;
         article.appendChild(card);
 
-        const restart = document.createElement("button");
-        restart.textContent = "Start Over";
-        restart.className = "step-btn";
-        restart.onclick = () => {
-          current = a.flow.start;
-          showStep();
-        };
-        article.appendChild(restart);
         return;
       }
-
-      article.textContent = "Stepper error: step has no question or result.";
     }
 
     showStep();
@@ -92,20 +85,13 @@ async function init() {
   function renderArticle(a) {
     articleTitle.textContent = a ? a.title : "Select an article";
     article.innerHTML = "";
+
+    if (ticketFields) {
+      ticketFields.style.display =
+        a && a.type === "stepper" ? "block" : "none";
+    }
+
     if (!a) return;
-
-    const meta = document.createElement("div");
-    meta.style.color = "#5f6368";
-    meta.style.fontSize = "13px";
-    meta.style.marginBottom = "12px";
-
-    const catName = (kb.categories || []).find(c => c.id === a.category)?.name || "";
-    const parts = [];
-    if (catName) parts.push(catName);
-    if (a.minutes) parts.push("~" + a.minutes + " min");
-    if (a.updated) parts.push("Updated " + a.updated);
-    meta.textContent = parts.join(" • ");
-    article.appendChild(meta);
 
     if (a.type === "stepper") {
       renderStepper(a);
@@ -119,29 +105,37 @@ async function init() {
     });
   }
 
-  function filteredArticles() {
-    const query = norm(q.value);
-    let list = (kb.articles || []).slice();
+  function renderCategories() {
+    catList.innerHTML = "";
 
-    if (activeCategory) {
-      list = list.filter(a => a.category === activeCategory);
+    const counts = {};
+    kb.articles.forEach(a => {
+      counts[a.category] = (counts[a.category] || 0) + 1;
+    });
+
+    function addCat(id, name) {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.textContent = name + " (" + (counts[id] || 0) + ")";
+      btn.onclick = () => {
+        activeCategory = id;
+        renderList();
+      };
+      li.appendChild(btn);
+      catList.appendChild(li);
     }
 
-    if (query) {
-      list = list.filter(a => searchableText(a).includes(query));
-    }
-
-    return list;
+    addCat(null, "All Articles");
+    kb.categories.forEach(c => addCat(c.id, c.name));
   }
 
   function renderList() {
-    const list = filteredArticles();
     results.innerHTML = "";
 
-    if (countPill) {
-      const total = (kb.articles || []).length;
-      const shown = list.length;
-      countPill.textContent = `${shown} of ${total}`;
+    let list = kb.articles;
+
+    if (activeCategory) {
+      list = list.filter(a => a.category === activeCategory);
     }
 
     list.forEach(a => {
@@ -155,55 +149,10 @@ async function init() {
       results.appendChild(div);
     });
 
-    if (!list.length) {
-      const empty = document.createElement("div");
-      empty.style.color = "#5f6368";
-      empty.style.padding = "8px";
-      empty.textContent = "No matches.";
-      results.appendChild(empty);
-      renderArticle(null);
+    if (countPill) {
+      countPill.textContent = list.length + " of " + kb.articles.length;
     }
   }
-
-  function renderCategories() {
-    if (!catList) return;
-    catList.innerHTML = "";
-
-    const counts = {};
-    (kb.articles || []).forEach(a => {
-      counts[a.category] = (counts[a.category] || 0) + 1;
-    });
-
-    function addCat(id, name, count) {
-      const li = document.createElement("li");
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = activeCategory === id ? "active" : "";
-      btn.innerHTML = `<span>${name}</span><span class="catcount">${count}</span>`;
-      btn.onclick = () => {
-        activeCategory = id;
-        renderCategories();
-        renderList();
-        renderArticle(null);
-      };
-      li.appendChild(btn);
-      catList.appendChild(li);
-    }
-
-    addCat(null, "All Articles", (kb.articles || []).length);
-
-    (kb.categories || []).forEach(c => {
-      addCat(c.id, c.name, counts[c.id] || 0);
-    });
-  }
-
-  q?.addEventListener("input", renderList);
-
-  clearBtn?.addEventListener("click", () => {
-    q.value = "";
-    q.focus();
-    renderList();
-  });
 
   renderCategories();
   renderList();

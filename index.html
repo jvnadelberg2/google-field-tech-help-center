@@ -27,7 +27,7 @@
   <aside class="sidebar">
     <div class="sectionhead">Browse</div>
     <ul id="catList" class="catlist"></ul>
-</aside>
+  </aside>
   <section class="panel">
     <div class="panelhead">
       <div class="paneltitle">Articles</div>
@@ -40,7 +40,30 @@
     <div class="panelhead">
       <div class="paneltitle" id="articleTitle">Select an article</div>
     </div>
-    <article id="article"></article>
+  <div class="ticketfields" id="ticketFields" style="display:none">
+  <div class="tf-row">
+    <label for="tfSite">Site / Store ID</label>
+    <input id="tfSite" type="text" placeholder="e.g., MTV-0421" />
+  </div>
+  <div class="tf-row">
+    <label for="tfAsset">Asset / Device</label>
+    <input id="tfAsset" type="text" placeholder="e.g., AP-3F-12 or Serial" />
+  </div>
+  <div class="tf-row">
+    <label for="tfPort">Switch Port</label>
+    <input id="tfPort" type="text" placeholder="e.g., SW1 Gi1/0/24" />
+  </div>
+  <div class="tf-row">
+    <label for="tfMac">MAC</label>
+    <input id="tfMac" type="text" placeholder="e.g., 00:11:22:33:44:55" />
+  </div>
+  <div class="tf-row">
+    <label for="tfIp">IP</label>
+    <input id="tfIp" type="text" placeholder="e.g., 10.12.34.56" />
+  </div>
+</div>
+
+<article id="article"></article>
   </section>
 </main>
 
