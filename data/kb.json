@@ -37,14 +37,54 @@
           },
           "ip": {
             "question": "Does the device receive an IP address?",
-            "yes": "upstream",
+            "yes": "gateway",
             "no": "dhcp"
           },
           "dhcp": {
-            "result": "Verify VLAN, DHCP scope, and switch port configuration."
+            "question": "Is the switch port configured for the correct VLAN?",
+            "yes": "dhcp_scope",
+            "no": "fix_vlan"
           },
-          "upstream": {
-            "result": "Escalate to network team with collected details."
+          "fix_vlan": {
+            "result": "Correct the switch port VLAN assignment, then retry DHCP."
+          },
+          "dhcp_scope": {
+            "question": "Is the DHCP scope healthy and available?",
+            "yes": "escalate_dhcp",
+            "no": "fix_dhcp_scope"
+          },
+          "fix_dhcp_scope": {
+            "result": "Restore or expand the DHCP scope, then retry the connection."
+          },
+          "escalate_dhcp": {
+            "result": "Escalate to the network team with VLAN, port, and DHCP findings."
+          },
+          "gateway": {
+            "question": "Can the device reach the default gateway?",
+            "yes": "dns",
+            "no": "gateway_issue"
+          },
+          "gateway_issue": {
+            "result": "Escalate to the network team with IP address, subnet, gateway, and ping results."
+          },
+          "dns": {
+            "question": "Can the device resolve DNS?",
+            "yes": "service_access",
+            "no": "dns_issue"
+          },
+          "dns_issue": {
+            "result": "Check DNS server settings or escalate with IP, gateway, and DNS test results."
+          },
+          "service_access": {
+            "question": "Can the device reach the required internal service or external endpoint?",
+            "yes": "app_layer",
+            "no": "routing_firewall"
+          },
+          "routing_firewall": {
+            "result": "Investigate routing, firewall, proxy, or upstream path issues and escalate with collected test results."
+          },
+          "app_layer": {
+            "result": "Network path appears healthy. Continue application-layer troubleshooting and attach collected test results to the ticket."
           }
         }
       }
