@@ -1,28 +1,45 @@
 {
   "categories": [
     { "id": "onsite", "name": "On-site basics" },
-    { "id": "networking", "name": "Networking" }
+    { "id": "networking", "name": "Networking" },
+    { "id": "hardware", "name": "Hardware troubleshooting" }
   ],
   "articles": [
     {
       "id": "site-arrival-checklist",
       "category": "onsite",
       "title": "Site arrival checklist",
-      "summary": "A 2-minute checklist to prevent rework and speed up closeout.",
+      "summary": "A quick checklist to prevent rework and speed up ticket closeout.",
       "minutes": 3,
       "updated": "2026-02-27",
       "content": [
-        "Confirm ticket details before entering the site.",
+        "Confirm the ticket number and device ID before starting.",
         "Badge in and record time-in.",
-        "Capture LED states and any visible errors.",
-        "Take label photos before making changes."
+        "Capture LED states and visible errors.",
+        "Take label photos before making changes.",
+        "Verify device power and cabling before escalating."
+      ]
+    },
+    {
+      "id": "device-reboot-procedure",
+      "category": "onsite",
+      "title": "Safe device reboot procedure",
+      "summary": "Steps for rebooting network devices without disrupting active users.",
+      "minutes": 4,
+      "updated": "2026-02-25",
+      "content": [
+        "Notify any impacted users if the device is shared.",
+        "Check device logs for critical errors before rebooting.",
+        "Perform a soft reboot using the management interface if available.",
+        "Wait for link lights and status indicators to stabilize.",
+        "Verify connectivity after the device returns online."
       ]
     },
     {
       "id": "basic-network-triage",
       "category": "networking",
       "title": "Basic network triage",
-      "summary": "Interactive guided troubleshooting for connectivity issues.",
+      "summary": "Interactive troubleshooting flow for connectivity issues.",
       "type": "stepper",
       "flow": {
         "start": "link",
@@ -33,7 +50,7 @@
             "no": "no_link"
           },
           "no_link": {
-            "result": "Check cable, switch port, and power to device."
+            "result": "Check cable connections, confirm switch port status, and verify device power."
           },
           "ip": {
             "question": "Does the device receive an IP address?",
@@ -46,18 +63,18 @@
             "no": "fix_vlan"
           },
           "fix_vlan": {
-            "result": "Correct the switch port VLAN assignment, then retry DHCP."
+            "result": "Correct the VLAN assignment on the switch port and retry DHCP."
           },
           "dhcp_scope": {
             "question": "Is the DHCP scope healthy and available?",
             "yes": "escalate_dhcp",
-            "no": "fix_dhcp_scope"
+            "no": "fix_scope"
           },
-          "fix_dhcp_scope": {
-            "result": "Restore or expand the DHCP scope, then retry the connection."
+          "fix_scope": {
+            "result": "Restore or expand the DHCP scope before reconnecting the device."
           },
           "escalate_dhcp": {
-            "result": "Escalate to the network team with VLAN, port, and DHCP findings."
+            "result": "Escalate to the network team with VLAN ID, port number, and DHCP logs."
           },
           "gateway": {
             "question": "Can the device reach the default gateway?",
@@ -65,29 +82,73 @@
             "no": "gateway_issue"
           },
           "gateway_issue": {
-            "result": "Escalate to the network team with IP address, subnet, gateway, and ping results."
+            "result": "Investigate routing configuration or escalate with ping test results."
           },
           "dns": {
             "question": "Can the device resolve DNS?",
-            "yes": "service_access",
+            "yes": "service",
             "no": "dns_issue"
           },
           "dns_issue": {
-            "result": "Check DNS server settings or escalate with IP, gateway, and DNS test results."
+            "result": "Verify DNS server configuration and connectivity."
           },
-          "service_access": {
-            "question": "Can the device reach the required internal service or external endpoint?",
+          "service": {
+            "question": "Can the device reach the required service?",
             "yes": "app_layer",
-            "no": "routing_firewall"
+            "no": "routing_issue"
           },
-          "routing_firewall": {
-            "result": "Investigate routing, firewall, proxy, or upstream path issues and escalate with collected test results."
+          "routing_issue": {
+            "result": "Investigate routing or firewall rules blocking service access."
           },
           "app_layer": {
-            "result": "Network path appears healthy. Continue application-layer troubleshooting and attach collected test results to the ticket."
+            "result": "Network path appears healthy. Continue troubleshooting the application layer."
           }
         }
       }
+    },
+    {
+      "id": "wifi-signal-check",
+      "category": "networking",
+      "title": "Check Wi-Fi signal strength",
+      "summary": "Quick checks for diagnosing poor wireless performance.",
+      "minutes": 5,
+      "updated": "2026-02-20",
+      "content": [
+        "Confirm the access point is powered and broadcasting the expected SSID.",
+        "Check signal strength using a Wi-Fi analyzer tool.",
+        "Verify the client device is connected to the correct network.",
+        "Look for sources of interference such as microwaves or dense metal shelving.",
+        "Test connectivity by pinging the gateway and external services."
+      ]
+    },
+    {
+      "id": "device-not-powering",
+      "category": "hardware",
+      "title": "Device not powering on",
+      "summary": "Steps to diagnose a device that will not start or shows no status lights.",
+      "minutes": 4,
+      "updated": "2026-02-22",
+      "content": [
+        "Confirm the power cable is fully inserted.",
+        "Test the outlet with another device.",
+        "Inspect the power adapter for damage.",
+        "Verify the device power switch is on.",
+        "If still unresponsive, escalate with device model and serial number."
+      ]
+    },
+    {
+      "id": "led-status-reference",
+      "category": "hardware",
+      "title": "Common LED status indicators",
+      "summary": "Interpret common device LED patterns used during troubleshooting.",
+      "minutes": 2,
+      "updated": "2026-02-21",
+      "content": [
+        "Solid green typically indicates normal operation.",
+        "Blinking amber often signals configuration or connectivity issues.",
+        "No light usually indicates power or hardware failure.",
+        "Rapid blinking may indicate firmware updates or boot cycles."
+      ]
     }
   ]
 }

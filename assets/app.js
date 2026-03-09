@@ -22,16 +22,23 @@ async function init() {
   let activeCategory = ALL;
   let activeArticleId = null;
 
-  function norm(s) {
-    return (s || "")
+  function norm(value) {
+    return (value || "")
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, " ")
       .replace(/\s+/g, " ")
       .trim();
   }
 
-  function searchableText(a) {
-    return norm([a.title, a.summary, ...(a.tags || [])].join(" "));
+  function searchableText(item) {
+    return norm([item.title, item.summary, ...(item.tags || [])].join(" "));
+  }
+
+  function createEl(tag, className, text) {
+    const el = document.createElement(tag);
+    if (className) el.className = className;
+    if (typeof text === "string") el.textContent = text;
+    return el;
   }
 
   function setTicketFieldsVisible(visible) {
@@ -40,7 +47,7 @@ async function init() {
   }
 
   function categoryNameFor(articleObj) {
-    const cat = (kb.categories || []).find(c => c.id === articleObj?.category);
+    const cat = (kb.categories || []).find((c) => c.id === articleObj?.category);
     return cat ? cat.name : "";
   }
 
@@ -58,12 +65,12 @@ async function init() {
     try {
       const raw = localStorage.getItem("ft_ticketDraft");
       if (!raw) return;
-      const d = JSON.parse(raw);
-      if (tfSite && typeof d.site === "string") tfSite.value = d.site;
-      if (tfAsset && typeof d.asset === "string") tfAsset.value = d.asset;
-      if (tfPort && typeof d.port === "string") tfPort.value = d.port;
-      if (tfMac && typeof d.mac === "string") tfMac.value = d.mac;
-      if (tfIp && typeof d.ip === "string") tfIp.value = d.ip;
+      const draft = JSON.parse(raw);
+      if (tfSite && typeof draft.site === "string") tfSite.value = draft.site;
+      if (tfAsset && typeof draft.asset === "string") tfAsset.value = draft.asset;
+      if (tfPort && typeof draft.port === "string") tfPort.value = draft.port;
+      if (tfMac && typeof draft.mac === "string") tfMac.value = draft.mac;
+      if (tfIp && typeof draft.ip === "string") tfIp.value = draft.ip;
     } catch (_) {}
   }
 
@@ -74,57 +81,60 @@ async function init() {
   }
 
   function wireTicketDraftAutosave() {
-    const fields = [tfSite, tfAsset, tfPort, tfMac, tfIp].filter(Boolean);
-    fields.forEach(el => el.addEventListener("input", saveTicketDraft));
+    [tfSite, tfAsset, tfPort, tfMac, tfIp]
+      .filter(Boolean)
+      .forEach((el) => el.addEventListener("input", saveTicketDraft));
   }
 
   function generateSummary(title, path, result, ticket) {
-    let text = "";
-    text += "Escalation Summary\n";
-    text += "------------------\n";
-    text += `Issue: ${title}\n\n`;
-
     const lines = [];
-    if (ticket?.site) lines.push(`Site/Store: ${ticket.site}`);
-    if (ticket?.asset) lines.push(`Asset/Device: ${ticket.asset}`);
-    if (ticket?.port) lines.push(`Switch Port: ${ticket.port}`);
-    if (ticket?.mac) lines.push(`MAC: ${ticket.mac}`);
-    if (ticket?.ip) lines.push(`IP: ${ticket.ip}`);
+    lines.push("Escalation Summary");
+    lines.push("------------------");
+    lines.push(`Issue: ${title}`);
+    lines.push("");
 
-    if (lines.length) {
-      text += "Ticket Info:\n";
-      lines.forEach(l => (text += `- ${l}\n`));
-      text += "\n";
+    const ticketLines = [];
+    if (ticket?.site) ticketLines.push(`Site/Store: ${ticket.site}`);
+    if (ticket?.asset) ticketLines.push(`Asset/Device: ${ticket.asset}`);
+    if (ticket?.port) ticketLines.push(`Switch Port: ${ticket.port}`);
+    if (ticket?.mac) ticketLines.push(`MAC: ${ticket.mac}`);
+    if (ticket?.ip) ticketLines.push(`IP: ${ticket.ip}`);
+
+    if (ticketLines.length) {
+      lines.push("Ticket Info:");
+      ticketLines.forEach((line) => lines.push(`- ${line}`));
+      lines.push("");
     }
 
-    text += "Diagnostic Path:\n";
-    path.forEach(p => {
-      text += `- ${p.question} -> ${p.answer}\n`;
-    });
+    lines.push("Diagnostic Path:");
+    if (path.length) {
+      path.forEach((step) => lines.push(`- ${step.question} -> ${step.answer}`));
+    } else {
+      lines.push("- No questions answered");
+    }
 
-    text += "\nResult:\n";
-    text += result + "\n\n";
+    lines.push("");
+    lines.push("Result:");
+    lines.push(result);
+    lines.push("");
+    lines.push("Recommended Data to Include:");
+    lines.push("- Device MAC address");
+    lines.push("- Switch port ID");
+    lines.push("- VLAN (if known)");
+    lines.push("- IP address");
 
-    text += "Recommended Data to Include:\n";
-    text += "- Device MAC address\n";
-    text += "- Switch port ID\n";
-    text += "- VLAN (if known)\n";
-    text += "- IP address\n";
-
-    return text;
+    return lines.join("\n");
   }
 
-  // Sidebar counts should respect SEARCH, but not the active category.
-  // All Articles should ALWAYS be the total matches for the current query.
   function countsByCategoryForQuery() {
     const query = norm(q?.value || "");
     const counts = {};
     let total = 0;
 
-    (kb.articles || []).forEach(a => {
-      if (query && !searchableText(a).includes(query)) return;
+    (kb.articles || []).forEach((item) => {
+      if (query && !searchableText(item).includes(query)) return;
       total += 1;
-      const catId = a.category || "";
+      const catId = item.category || "";
       counts[catId] = (counts[catId] || 0) + 1;
     });
 
@@ -135,101 +145,157 @@ async function init() {
     const query = norm(q?.value || "");
     let list = (kb.articles || []).slice();
 
-    if (activeCategory !== ALL) list = list.filter(a => a.category === activeCategory);
-    if (query) list = list.filter(a => searchableText(a).includes(query));
+    if (activeCategory !== ALL) {
+      list = list.filter((item) => item.category === activeCategory);
+    }
+
+    if (query) {
+      list = list.filter((item) => searchableText(item).includes(query));
+    }
 
     return list;
   }
 
-  function renderStepper(a) {
-    let current = a.flow?.start;
+  function renderEmptyState() {
+    article.innerHTML = "";
+    const wrapper = createEl("div", "empty-state");
+    const heading = createEl("h3", "", "Choose an article or workflow");
+    const copy = createEl(
+      "p",
+      "",
+      "Select a help article to view instructions, or open a guided troubleshooting workflow to generate escalation notes."
+    );
+    wrapper.appendChild(heading);
+    wrapper.appendChild(copy);
+    article.appendChild(wrapper);
+  }
+
+  function renderStepper(item) {
+    let current = item.flow?.start;
     const path = [];
+
+    function rebuildCurrentFromPath() {
+      current = item.flow?.start;
+      for (const entry of path) {
+        const step = item.flow?.steps?.[current];
+        if (!step) break;
+        current = entry.answer === "Yes" ? step.yes : step.no;
+      }
+    }
 
     function showStep() {
       article.innerHTML = "";
+      const step = item.flow?.steps?.[current];
 
-      const step = a.flow?.steps?.[current];
       if (!step) {
         article.textContent = "Stepper error: missing step definition.";
         return;
       }
 
+      const progress = createEl("div", "article-meta", `Troubleshooting step ${path.length + 1}`);
+      article.appendChild(progress);
+
+      if (path.length) {
+        const historyBox = createEl("div", "summary-box");
+        const historyTitle = createEl("div", "", "Path so far:");
+        historyTitle.style.fontWeight = "600";
+        historyBox.appendChild(historyTitle);
+
+        const list = createEl("ul", "");
+        list.style.margin = "8px 0 0 18px";
+        path.forEach((entry) => {
+          const li = createEl("li", "", `${entry.question} -> ${entry.answer}`);
+          list.appendChild(li);
+        });
+        historyBox.appendChild(list);
+        article.appendChild(historyBox);
+      }
+
       if (step.question) {
-        const h = document.createElement("h3");
-        h.textContent = step.question;
-        article.appendChild(h);
+        const heading = createEl("h3", "", step.question);
+        article.appendChild(heading);
 
-        const yesBtn = document.createElement("button");
-        yesBtn.textContent = "Yes";
-        yesBtn.className = "step-btn";
+        const help = createEl(
+          "p",
+          "article-meta",
+          "Choose the answer that best matches what you observe on-site."
+        );
+        article.appendChild(help);
 
-        const noBtn = document.createElement("button");
-        noBtn.textContent = "No";
-        noBtn.className = "step-btn secondary";
+        const row = createEl("div", "step-actions");
 
+        const yesBtn = createEl("button", "step-btn", "Yes");
+        yesBtn.type = "button";
         yesBtn.onclick = () => {
           path.push({ question: step.question, answer: "Yes" });
           current = step.yes;
           showStep();
         };
 
+        const noBtn = createEl("button", "step-btn secondary", "No");
+        noBtn.type = "button";
         noBtn.onclick = () => {
           path.push({ question: step.question, answer: "No" });
           current = step.no;
           showStep();
         };
 
-        const row = document.createElement("div");
-        row.style.display = "flex";
-        row.style.gap = "10px";
-        row.style.flexWrap = "wrap";
-        row.style.marginTop = "12px";
         row.appendChild(yesBtn);
         row.appendChild(noBtn);
-        article.appendChild(row);
 
+        if (path.length) {
+          const backBtn = createEl("button", "step-btn secondary", "Back");
+          backBtn.type = "button";
+          backBtn.onclick = () => {
+            path.pop();
+            rebuildCurrentFromPath();
+            showStep();
+          };
+          row.appendChild(backBtn);
+        }
+
+        article.appendChild(row);
         return;
       }
 
       if (step.result) {
-        const card = document.createElement("div");
-        card.className = "result-card";
-        card.textContent = step.result;
+        const card = createEl("div", "result-card", step.result);
         article.appendChild(card);
 
-        const ticket = getTicketInfo();
-        const summaryText = generateSummary(a.title, path, step.result, ticket);
-
-        const summaryBox = document.createElement("pre");
-        summaryBox.className = "summary-box";
-        summaryBox.textContent = summaryText;
+        const summaryText = generateSummary(item.title, path, step.result, getTicketInfo());
+        const summaryBox = createEl("pre", "summary-box", summaryText);
         article.appendChild(summaryBox);
 
-        const copyBtn = document.createElement("button");
-        copyBtn.textContent = "Copy Escalation Notes";
-        copyBtn.className = "step-btn";
+        const actions = createEl("div", "step-actions");
+
+        const copyBtn = createEl("button", "step-btn", "Copy Escalation Notes");
+        copyBtn.type = "button";
         copyBtn.onclick = async () => {
           try {
             await navigator.clipboard.writeText(summaryText);
             copyBtn.textContent = "Copied ✓";
-            setTimeout(() => (copyBtn.textContent = "Copy Escalation Notes"), 1500);
+            setTimeout(() => {
+              copyBtn.textContent = "Copy Escalation Notes";
+            }, 1500);
           } catch (_) {
             copyBtn.textContent = "Copy failed";
-            setTimeout(() => (copyBtn.textContent = "Copy Escalation Notes"), 1500);
+            setTimeout(() => {
+              copyBtn.textContent = "Copy Escalation Notes";
+            }, 1500);
           }
         };
-        article.appendChild(copyBtn);
 
-        const restart = document.createElement("button");
-        restart.textContent = "Start Over";
-        restart.className = "step-btn secondary";
-        restart.onclick = () => {
-          current = a.flow?.start;
+        const restartBtn = createEl("button", "step-btn secondary", "Start Over");
+        restartBtn.type = "button";
+        restartBtn.onclick = () => {
+          current = item.flow?.start;
           path.length = 0;
           showStep();
         };
-        article.appendChild(restart);
 
+        actions.appendChild(copyBtn);
+        actions.appendChild(restartBtn);
+        article.appendChild(actions);
         return;
       }
 
@@ -239,36 +305,35 @@ async function init() {
     showStep();
   }
 
-  function renderArticle(a) {
-    activeArticleId = a?.id || null;
-
-    articleTitle.textContent = a ? a.title : "Select an article";
+  function renderArticle(item) {
+    activeArticleId = item?.id || null;
+    articleTitle.textContent = item ? item.title : "Select an article";
     article.innerHTML = "";
 
-    setTicketFieldsVisible(!!a && a.type === "stepper");
-    if (!a) return;
-
-    const meta = document.createElement("div");
-    meta.style.color = "#5f6368";
-    meta.style.fontSize = "13px";
-    meta.style.marginBottom = "12px";
-
-    const catName = categoryNameFor(a);
-    const parts = [];
-    if (catName) parts.push(catName);
-    if (a.minutes) parts.push("~" + a.minutes + " min");
-    if (a.updated) parts.push("Updated " + a.updated);
-    meta.textContent = parts.join(" • ");
-    article.appendChild(meta);
-
-    if (a.type === "stepper") {
-      renderStepper(a);
+    setTicketFieldsVisible(Boolean(item && item.type === "stepper"));
+    if (!item) {
+      renderEmptyState();
       return;
     }
 
-    (a.content || []).forEach(line => {
-      const p = document.createElement("p");
-      p.textContent = line;
+    const catName = categoryNameFor(item);
+    const parts = [];
+    if (catName) parts.push(catName);
+    if (item.minutes) parts.push(`~${item.minutes} min`);
+    if (item.updated) parts.push(`Updated ${item.updated}`);
+
+    if (parts.length) {
+      const meta = createEl("div", "article-meta", parts.join(" • "));
+      article.appendChild(meta);
+    }
+
+    if (item.type === "stepper") {
+      renderStepper(item);
+      return;
+    }
+
+    (item.content || []).forEach((line) => {
+      const p = createEl("p", "", line);
       article.appendChild(p);
     });
   }
@@ -283,30 +348,39 @@ async function init() {
 
     if (countPill) countPill.textContent = `${shown} of ${totalForPill}`;
 
-    list.forEach(a => {
-      const div = document.createElement("div");
-      div.className = "article-link";
-      div.innerHTML = `
-        <div style="font-weight:600">${a.title}</div>
-        <div style="color:#5f6368;font-size:13px;margin-top:4px">${a.summary || ""}</div>
-      `;
-      div.onclick = () => renderArticle(a);
-      results.appendChild(div);
+    list.forEach((item) => {
+      const card = createEl("button", "article-link");
+      card.type = "button";
+      card.style.width = "100%";
+      card.style.textAlign = "left";
+
+      if (item.id === activeArticleId) {
+        card.classList.add("active");
+      }
+
+      const title = createEl("div", "", item.title);
+      title.style.fontWeight = "600";
+
+      const summary = createEl("div", "article-meta", item.summary || "");
+      summary.style.marginTop = "4px";
+      summary.style.marginBottom = "0";
+
+      card.appendChild(title);
+      card.appendChild(summary);
+      card.onclick = () => renderArticle(item);
+      results.appendChild(card);
     });
 
     if (!list.length) {
-      const empty = document.createElement("div");
-      empty.style.color = "#5f6368";
-      empty.style.padding = "8px";
-      empty.textContent = "No matches.";
+      const empty = createEl("div", "article-meta", "No matches.");
       results.appendChild(empty);
       renderArticle(null);
       return;
     }
 
     if (activeArticleId) {
-      const stillThere = list.some(a => a.id === activeArticleId);
-      if (!stillThere) renderArticle(null);
+      const stillVisible = list.some((item) => item.id === activeArticleId);
+      if (!stillVisible) renderArticle(null);
     }
   }
 
@@ -316,11 +390,10 @@ async function init() {
 
     const { counts, total } = countsByCategoryForQuery();
 
-    function addCat(id, name, count) {
-      const li = document.createElement("li");
-      const btn = document.createElement("button");
+    function addCategory(id, name, count) {
+      const li = createEl("li");
+      const btn = createEl("button", activeCategory === id ? "active" : "");
       btn.type = "button";
-      btn.className = activeCategory === id ? "active" : "";
       btn.innerHTML = `<span>${name}</span><span class="catcount">${count}</span>`;
       btn.onclick = () => {
         activeCategory = id;
@@ -332,11 +405,9 @@ async function init() {
       catList.appendChild(li);
     }
 
-    // All Articles is now explicit and should NEVER show 0 unless there are 0 matches for the current search.
-    addCat(ALL, "All Articles", total);
-
-    (kb.categories || []).forEach(c => {
-      addCat(c.id, c.name, counts[c.id] || 0);
+    addCategory(ALL, "All Articles", total);
+    (kb.categories || []).forEach((cat) => {
+      addCategory(cat.id, cat.name, counts[cat.id] || 0);
     });
   }
 
@@ -354,10 +425,10 @@ async function init() {
 
   loadTicketDraft();
   wireTicketDraftAutosave();
-
   setTicketFieldsVisible(false);
   renderCategories();
   renderList();
+  renderEmptyState();
 }
 
 init();

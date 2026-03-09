@@ -15,6 +15,8 @@ It is built using:
 - Vanilla JavaScript (state + logic)
 - JSON (content source)
 
+The knowledge base includes multiple articles across several categories and a guided troubleshooting workflow that generates escalation notes for support teams.
+
 There is no backend. The application runs entirely in the browser and can be deployed via GitHub Pages.
 
 ---
@@ -40,7 +42,7 @@ Defines the 3-column layout:
 - Article list
 - Article detail panel
 
-Contains the search input and ticket metadata fields.
+Contains the search input and ticket metadata fields used for escalation summaries.
 
 This file contains no logic — only structure.
 
@@ -53,7 +55,8 @@ Handles:
 - Grid layout
 - Responsive behavior
 - Sidebar styling
-- Stepper buttons
+- Article cards
+- Stepper workflow UI
 - Result cards
 - Ticket input styling
 
@@ -76,6 +79,8 @@ Articles can be:
 - Interactive stepper flows (decision-tree based)
 
 Stepper flows are fully data-driven, meaning new troubleshooting guides can be added without modifying JavaScript.
+
+The knowledge base currently contains multiple articles and one guided troubleshooting workflow.
 
 ---
 
@@ -107,6 +112,7 @@ The file manages UI state and rendering without external libraries.
 - Dynamic search filtering
 - LocalStorage persistence
 - Static deploy architecture
+- Separation of content (JSON) from presentation and logic
 
 ---
 
@@ -123,5 +129,6 @@ This project demonstrates:
 - Clean separation of content and logic
 - Dynamic UI built with native browser APIs
 - Scalable knowledge-base structure
-- Practical UX design for technical workflows
+- Practical UX design for field troubleshooting workflows
+- Data-driven documentation architecture
 - Production-ready static deployment model
