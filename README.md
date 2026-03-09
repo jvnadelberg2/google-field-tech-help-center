@@ -1,6 +1,6 @@
 # Field Technician Help Center
 
-🔗 Live Demo: https://YOUR_GITHUB_USERNAME.github.io/google-field-tech-help-center/
+🔗 Live Demo: https://jvnadelberg2.github.io/google-field-tech-help-center/
 
 ---
 
